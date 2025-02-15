@@ -1,0 +1,138 @@
+Instructions:
+
+- Convert Selenium Java test automation code to Cypress Javascript while preserving the logic and functionality.
+- Ensure that the converted code follows Cypress's best practices, including:
+    -- Use npm Cypress mocha framework and promises assertions for automation code.
+	-- Selectors conversion (e.g., By.id() → CSS locators equivalent).
+    -- Handling of waits (Implicit/Explicit waits should be replaced with Cypress’s auto-waiting).
+    -- Assertions should be mapped to Cypress’s test assertions if applicable.
+    -- Maintain proper Javascript typings (Page, Browser, etc.) and use ES6+ features where appropriate.
+    -- Optimize code structure, removing unnecessary waits or redundant calls.
+    -- Ensure that logging/debugging mechanisms (if present in Selenium) are mapped correctly to Cypress equivalents.
+    -- The output must be idiomatic Cypress JavaScript, not just a direct Java-to-JavaScript translation.
+    -- Follow Cypress Official Documentation to ensure all functions are correctly
+    -- DO NOT add any additional steps other than given input code.
+    -- Disable strict mode violation when finding locators
+    -- Make sure to waitUntil: 'domcontentloaded' default cypress mechanism
+
+Context:
+
+I am building an AI-based prompt to convert Selenium Java code to Cypress JavaScript automatically.
+The converted code must be production-ready, as accuracy is crucial for my career growth.
+
+Example:
+
+Selenium Java (Input)
+
+java
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class PrintTitle {
+  public static void main(String[] args) {
+    WebDriver driver = new ChromeDriver();
+    driver.get("http://docs.cypress.io");
+    System.out.println(driver.getTitle());
+    driver.quit();
+  }
+}
+
+
+Cypress JavaScript (Expected Output)
+/// <reference Types="Cypress" />
+describe('My first Test on Cypress', function()
+{
+it('My first case', function () {
+cy.visit("http://docs.cypress.io")
+
+})
+})
+
+
+Persona:
+
+You are a Senior Test Automation Architect specializing in Selenium and Cypress migration. 
+Your responsibility is to ensure that the converted Cypress JavaScript code is accurate, maintainable, and follows industry best practices.
+
+Output Format:
+
+-   The output should be fully working Cypress JavaScript code.
+-   It should be structured as an executable script or within a test framework if required.
+-   The code should be formatted properly and follow Cypress’s official documentation. 
+-   DO NOT Provide anything other than Cypress Code Such as explanations, Key Points.
+-   Make Sure the comments are staying as it is in the code.
+
+Use the above framework to generate the Cypress JavaScript code for the following java code:
+
+package tests;
+
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+
+public class CreateLead {
+	
+	public static void main(String[] args) {
+		
+		// Step 1) Launch the chrome browser
+		ChromeDriver driver = new ChromeDriver();
+		
+		// Step 2) Load the URL 
+		driver.get("http://leaftaps.com/opentaps");
+		
+		// Step 3) Maximize the chrome browser
+		driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));		
+		
+		// Step 4) Find the username and type the value
+		driver.findElement(By.id("username")).sendKeys("DemoSalesManager");
+		
+		// Step 5) Find the password and type the value 
+		driver.findElement(By.id("password")).sendKeys("crmsfa");	
+		
+		// Step 6) Find the login button and click
+		driver.findElement(By.className("decorativeSubmit")).click();
+		
+		// Step 7) Print the title 
+		System.out.println(driver.getTitle());
+		
+		// Step 8) Click CRM/SFA link
+		driver.findElement(By.linkText("CRM/SFA")).click();
+		
+		// Step 9) Click Create Lead Link
+		driver.findElement(By.linkText("Create Lead")).click();
+		
+		// Step 10) Find the company name and type the value
+		driver.findElement(By.id("createLeadForm_companyName")).sendKeys("TestLeaf");
+		
+		// Step 11) Find the first name and type your first name
+		driver.findElement(By.id("createLeadForm_firstName")).sendKeys("Babu");
+
+		// Step 12) Find the last name and type your last name
+		driver.findElement(By.id("createLeadForm_lastName")).sendKeys("Manickam");
+		
+		// Step 13) Select the Source dropdown with one of the visible text
+		WebElement source = driver.findElement(By.id("createLeadForm_dataSourceId"));
+		Select dataSource = new Select(source);
+		dataSource.selectByVisibleText("Employee");
+		
+		// Step 14) Select the marketing campaign with one of the value
+		WebElement marketing = driver.findElement(By.id("createLeadForm_marketingCampaignId"));
+		Select campaign = new Select(marketing);
+		campaign.selectByValue("9001");
+
+		// Step 15) Click Create Lead Button
+		driver.findElement(By.name("submitButton")).click();
+		
+		// Step 16) Print the new title
+		System.out.println(driver.getTitle());
+		
+		// Step 17) Close the browser
+		driver.close();
+				
+	}
+
+}
