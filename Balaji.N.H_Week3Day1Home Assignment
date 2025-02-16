@@ -1,0 +1,671 @@
+/**
+ * Collection of default prompts for different use cases
+ */
+export const DEFAULT_PROMPTS = {
+  /**
+   * Prompt for generating Playwright test code
+   * Variables:
+   * - ${domContent}: The DOM content to analyze
+   * - ${userAction}: The user action to perform
+   * - ${pageUrl}: The page URL to navigate to
+   */
+  PLAYWRIGHT_CODE_GENERATION: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    Generate Playwright test code in TypeScript to perform the following action:
+    \${userAction}
+
+    Here is the page URL:
+    \${pageUrl}
+
+    Requirements:
+    1. Use only recommended Playwright locators in this priority order:
+       - Always use the HTML ids or names if they exist.
+       - Do not use id as locator when it has more than a single digit number as value
+       - Role-based locators (getByRole)
+       - Label-based locators (getByLabel)
+       - Text-based locators (getByText)
+       - Test ID-based locators (getByTestId)
+       - Only use other locators if the above options are not applicable.
+
+    2. Implementation guidelines:
+       - Write code using TypeScript with proper type annotations
+       - Include appropriate web-first assertions to validate the action
+       - Use Playwright's built-in configurations and devices when applicable
+       - Store frequently used locators in variables for reuse
+       - Avoid hard-coded waits - rely on auto-waiting
+       - Include error handling where appropriate
+       - Increase the timeout to 90 seconds
+       - If scenario involves navigation to a new page, do not assert on that new page's DOM
+
+    3. Code structure:
+       - Start with necessary imports
+       - Include test description
+       - Break down complex actions into smaller steps
+       - Use meaningful variable names
+       - Follow Playwright's best practices
+
+    4. Performance and reliability:
+       - Use built-in auto-waiting
+       - Use assertion timeouts rather than arbitrary sleeps
+       - Consider retry logic for flaky operations
+       - Consider network conditions and page load states
+
+    Respond with only the complete code block and no other text.
+
+    Example:
+    \`\`\`typescript
+    import { test, expect } from '@playwright/test';
+    test('descriptive test name', async ({ page }) => {
+      // Implementation
+    });
+    \`\`\`
+  `,
+
+  /**
+   * Prompt for generating Selenium Java test code ONLY
+   * (No page object class at all).
+   */
+  SELENIUM_JAVA_TEST_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want ONLY a Selenium Java TEST CLASS using TestNG (no page object class).
+    Action to perform: \${userAction}
+    URL: \${pageUrl}
+
+    Requirements:
+    1. Use recommended Selenium locator strategies in priority:
+       - The elements found using locators should be either one of these tags only : input, button, select, a, div
+       - By.id (only if the id doesn’t contain multiple digits like "ext-gen623")
+       - By.name
+       - By.linkText or partialLinkText for links
+       - By.cssSelector (avoid using any attribute containing "genai")
+       - By.xpath only if others aren’t suitable
+    2. Implementation guidelines:
+       - Java 8+ features if appropriate
+       - Use TestNG for assertions
+       - Use explicit waits (ExpectedConditions)
+       - Add JavaDoc for methods
+       - Use Javafaker for generating test data
+       - No new page object class is needed—pretend we already have it.
+       - DO NOT show the PageFactory or any page class reference
+
+    3. Code structure:
+       - Show only a single test class
+       - @BeforeMethod, @Test, and @AfterMethod
+       - Use meaningful method names
+       - Use properties file for config if you want
+       - Provide only the test class code block, no other text
+
+    Example:
+    \`\`\`java
+    package com.genai.tests;
+
+    import org.openqa.selenium.WebDriver;
+    import org.openqa.selenium.chrome.ChromeDriver;
+    import org.openqa.selenium.support.ui.WebDriverWait;
+    import org.testng.annotations.*;
+    import com.github.javafaker.Faker;
+    import java.time.Duration;
+
+    public class ComponentTest {
+        private WebDriver driver;
+        private WebDriverWait wait;
+        private Faker faker;
+
+        @BeforeMethod
+        public void setUp() {
+            driver = new ChromeDriver();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            faker = new Faker();
+            driver.manage().window().maximize();
+            driver.get("\${pageUrl}");
+        }
+
+        @Test
+        public void testComponentAction() {
+            // Implementation
+        }
+
+        @AfterMethod
+        public void tearDown() {
+            if (driver != null) {
+                driver.quit();
+            }
+        }
+    }
+    \`\`\`
+  `,
+
+  /**
+   * Prompt for generating Selenium Java Page class ONLY
+   * (No test class).
+   */
+  SELENIUM_JAVA_PAGE_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want ONLY a Selenium Java PAGE OBJECT CLASS for that DOM.
+    Action to perform: \${userAction}
+    URL: \${pageUrl}
+
+    Requirements:
+    1. Use recommended Selenium locator strategies in priority:
+       - By.id (avoid if the id has more than a single number)
+       - By.name
+       - By.linkText or partialLinkText for links
+       - By.xpath (use relative or following or preceding based on best case)
+       - By.cssSelector (avoid "genai" attributes) only if others aren’t suitable
+
+    2. Implementation guidelines:
+       - Java 8+ features if appropriate
+       - Use explicit waits (ExpectedConditions)
+       - Add JavaDoc for methods & class
+       - Use Javafaker if needed
+       - DO NOT provide any TestNG test class—only the page class
+       - Use PageFactory & @FindBy to show how elements are found
+
+    3. Code structure:
+       - Single page class
+       - A constructor that accepts WebDriver
+       - Use PageFactory.initElements
+       - Provide only the code block, no other text
+
+    Example:
+    \`\`\`java
+    package com.genai.pages;
+
+    import org.openqa.selenium.WebDriver;
+    import org.openqa.selenium.support.FindBy;
+    import org.openqa.selenium.support.PageFactory;
+    import org.openqa.selenium.support.ui.WebDriverWait;
+    import java.time.Duration;
+
+    public class ComponentPage {
+        private final WebDriver driver;
+        private final WebDriverWait wait;
+
+        public ComponentPage(WebDriver driver) {
+            this.driver = driver;
+            this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            PageFactory.initElements(driver, this);
+        }
+
+        // Page elements and methods
+    }
+    \`\`\`
+  `,
+
+  /**
+   * Prompt for generating Playwright Typescript Page Object class ONLY
+   * (No test class).
+   */
+  PLAYWRIGHT_TS_PAGE_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want ONLY a Playwright Page Object class for that DOM.
+    Action to perform: \${userAction}
+    URL: \${pageUrl}
+
+    Requirements:
+    1. Use recommended Playwright locators in this priority order:
+       - Always use the HTML ids or names if they exist.
+       - Do not use id as locator when it has more than a single digit number as value
+       - Role-based locators (getByRole)
+       - Label-based locators (getByLabel)
+       - Text-based locators (getByText)
+       - Test ID-based locators (getByTestId)
+       - Only use other locators if the above options are not applicable.
+
+    2. Implementation guidelines:
+       - Write code using TypeScript with proper type annotations
+       - Store frequently used locators in variables for reuse
+       - Avoid hard-coded waits - rely on auto-waiting
+       - Include error handling where appropriate
+       - Increase the timeout to 90 seconds
+       - If scenario involves navigation to a new page, do not assert on that new page's DOM
+
+    3. Code structure:
+       - Single page class
+       - A constructor that accepts Page
+       - Use meaningful variable names
+       - Follow Playwright's best practices
+
+    Respond with only the complete code block and no other text.
+
+    Example:
+    \`\`\`typescript
+    import { Page, Locator } from '@playwright/test';
+
+    export class ComponentPage {
+        private readonly page: Page;
+        private readonly someElement: Locator;
+
+        constructor(page: Page) {
+            this.page = page;
+            this.someElement = page.getByRole('button', { name: 'Submit' });
+        }
+
+        async performAction() {
+            await this.someElement.click();
+        }
+    }
+    \`\`\`
+  `,
+  
+    /**
+   * Prompt for generating Playwright Typescript test-only class
+   * (No page object class at all).
+   */
+    PLAYWRIGHT_TS_TEST_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want ONLY a Playwright test class in TypeScript (no page object class).
+    Action to perform: \${userAction}
+    URL: \${pageUrl}
+
+    Requirements:
+    1. Use only recommended Playwright locators in this priority order:
+       - Always use the HTML ids or names if they exist.
+       - Do not use id as locator when it has more than a single digit number as value
+       - Role-based locators (getByRole)
+       - Label-based locators (getByLabel)
+       - Text-based locators (getByText)
+       - Test ID-based locators (getByTestId)
+       - Only use other locators if the above options are not applicable.
+
+    2. Implementation guidelines:
+       - Write code using TypeScript with proper type annotations
+       - Include appropriate web-first assertions to validate the action
+       - Use Playwright's built-in configurations and devices when applicable
+       - Store frequently used locators in variables for reuse
+       - Avoid hard-coded waits - rely on auto-waiting
+       - Include error handling where appropriate
+       - Increase the timeout to 90 seconds
+       - If scenario involves navigation to a new page, do not assert on that new page's DOM
+
+    3. Code structure:
+       - Start with necessary imports
+       - Include test description
+       - Break down complex actions into smaller steps
+       - Use meaningful variable names
+       - Follow Playwright's best practices
+
+    4. Performance and reliability:
+       - Use built-in auto-waiting
+       - Use assertion timeouts rather than arbitrary sleeps
+       - Consider retry logic for flaky operations
+       - Consider network conditions and page load states
+
+    Respond with only the complete code block and no other text.
+
+    Example:
+    \`\`\`typescript
+    import { test, expect } from '@playwright/test';
+
+    test.describe('Component Tests', () => {
+      test.beforeEach(async ({ page }) => {
+        await page.goto('\${pageUrl}');
+      });
+
+      test('should perform \${userAction}', async ({ page }) => {
+        // Implementation
+      });
+    });
+    \`\`\`
+  `,
+
+   /**
+   * Prompt for generating Playwright JavaScript Page Object class ONLY
+   * (No test class).
+   */
+   PLAYWRIGHT_JS_PAGE_ONLY: `
+   Given the following DOM structure:
+   \`\`\`html
+   \${domContent}
+   \`\`\`
+
+   We want ONLY a Playwright page class in JavaScript (no test class).
+   Action to perform: \${userAction}
+   URL: \${pageUrl}
+
+   Requirements:
+   1. Use only recommended Playwright locators in this priority order:
+      - Always use the HTML ids or names if they exist.
+      - Do not use id as locator when it has more than a single digit number as value
+      - Role-based locators (getByRole)
+      - Label-based locators (getByLabel)
+      - Text-based locators (getByText)
+      - Test ID-based locators (getByTestId)
+      - Only use other locators if the above options are not applicable.
+
+   2. Implementation guidelines:
+      - Write code using JavaScript (ES6+ features)
+      - Include appropriate web-first assertions to validate the action
+      - Use Playwright's built-in configurations and devices when applicable
+      - Store frequently used locators in variables for reuse
+      - Avoid hard-coded waits - rely on auto-waiting
+      - Include error handling where appropriate
+      - Increase the timeout to 90 seconds
+      - If scenario involves navigation to a new page, do not assert on that new page's DOM
+
+   3. Code structure:
+      - Start with necessary imports
+      - Include test description
+      - Break down complex actions into smaller steps
+      - Use meaningful variable names
+      - Follow Playwright's best practices
+
+   4. Performance and reliability:
+      - Use built-in auto-waiting
+      - Use assertion timeouts rather than arbitrary sleeps
+      - Consider retry logic for flaky operations
+      - Consider network conditions and page load states
+
+   5. Assertions:
+      - Include both positive and negative scenarios
+      - Use Playwright's built-in assertions (e.g., expect) for validation
+
+   Respond with only the complete code block and no other text.
+
+   Example:
+   \`\`\`javascript
+   const { test, expect } = require('@playwright/test');
+
+   test.describe('Component Tests', () => {
+     test.beforeEach(async ({ page }) => {
+       await page.goto('\${pageUrl}');
+     });
+
+     test('should perform \${userAction}', async ({ page }) => {
+       // Positive scenario
+       const element = page.getByRole('button', { name: 'Submit' });
+       await expect(element).toBeVisible();
+       await element.click();
+
+       // Negative scenario
+       const nonExistentElement = page.getByText('Non-existent text');
+       await expect(nonExistentElement).not.toBeVisible();
+     });
+   });
+   \`\`\`
+ `,
+    /**
+   * Prompt for generating Playwright JavaScript test-only class
+   * (No page object class at all).
+   */
+    PLAYWRIGHT_JS_TEST_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want ONLY a Playwright test class in JavaScript (no page object class).
+    Action to perform: \${userAction}
+    URL: \${pageUrl}
+
+    Requirements:
+    1. Use only recommended Playwright locators in this priority order:
+       - Always use the HTML ids or names if they exist.
+       - Do not use id as locator when it has more than a single digit number as value
+       - Role-based locators (getByRole)
+       - Label-based locators (getByLabel)
+       - Text-based locators (getByText)
+       - Test ID-based locators (getByTestId)
+       - Only use other locators if the above options are not applicable.
+
+    2. Implementation guidelines:
+       - Write code using JavaScript (ES6+)
+       - Include appropriate web-first assertions to validate the action
+       - Use Playwright's built-in configurations and devices when applicable
+       - Store frequently used locators in variables for reuse
+       - Avoid hard-coded waits - rely on Playwright's auto-waiting
+       - Include error handling where appropriate
+       - Increase the timeout to 90 seconds
+       - If scenario involves navigation to a new page, do not assert on that new page's DOM
+
+    3. Code structure:
+       - Start with necessary imports
+       - Include test description
+       - Break down complex actions into smaller steps
+       - Use meaningful variable names
+       - Follow Playwright's best practices
+
+    4. Performance and reliability:
+       - Use built-in auto-waiting
+       - Use assertion timeouts rather than arbitrary sleeps
+       - Consider retry logic for flaky operations
+       - Consider network conditions and page load states
+
+    5. Assertions:
+       - Include both positive and negative scenarios
+       - Use Playwright's built-in assertions (e.g., expect)
+
+    Respond with only the complete code block and no other text.
+
+    Example:
+    \`\`\`javascript
+    const { test, expect } = require('@playwright/test');
+
+    test.describe('Component Tests', () => {
+      test.beforeEach(async ({ page }) => {
+        await page.goto('\${pageUrl}');
+      });
+
+      test('should perform \${userAction}', async ({ page }) => {
+        // Positive scenario
+        await expect(page.getByRole('button', { name: 'Submit' })).toBeVisible();
+        await page.getByRole('button', { name: 'Submit' }).click();
+        await expect(page).toHaveURL(/success/);
+
+        // Negative scenario
+        await expect(page.getByText('Error message')).not.toBeVisible();
+      });
+    });
+    \`\`\`
+  `,
+  /**
+   * Prompt for generating Cucumber Feature file
+   */
+  CUCUMBER_ONLY: `
+    Given the following DOM structure:
+    \`\`\`html
+    \${domContent}
+    \`\`\`
+
+    We want a **Cucumber (Gherkin) .feature file** referencing **every relevant field** in the DOM snippet.
+
+    **Instructions**:
+    1. **Do not** include any explanations or extra text beyond the .feature content.
+    2. **Identify** each relevant element (input, textarea, select, button, etc.).
+    3. For each element, **create one step** referencing a placeholder (e.g. \`<fieldName>\`):
+      - e.g. "When I type <companyName> into the 'Company Name' field"
+      - e.g. "And I choose <state> in the 'State' dropdown"
+      - e.g. "And I click the 'Create Lead' button"
+    4. Use a **Scenario Outline** + **Examples** to parametrize these placeholders.
+    5. **Ensure one action per step**.
+    6. Output **only** valid Gherkin in a single \`\`\`gherkin code block.
+
+    Produce **only** the .feature content as below :
+    \`\`\`gherkin
+    Feature: Describe your feature
+      As a user of the system
+      I want to \${userAction}
+      So that <some reason>
+
+      Scenario Outline: A scenario describing \${userAction}
+        Given I open "\${pageUrl}"
+        # For each input, select, button in the snippet:
+        #   - create a single step referencing it with a placeholder
+        #   - e.g. "When I enter <companyName> in the 'Company Name' field"
+        #   - e.g. "And I click the 'Create Lead' button"
+        #   - etc.
+        # ...
+        Then I should see <some expected outcome>
+
+      # Provide a minimal Examples table with columns for each placeholder:
+      Examples:
+        | companyName   | firstName   | lastName   | description   | generalCity   | state   |
+        | "Acme Corp"   | "Alice"     | "Tester"   | "Some text"   | "Dallas"      | "TX"    |
+        | "Mega Corp"   | "Bob"       | "Sample"   | "Other desc"  | "Miami"       | "FL"    |
+    \`\`\`
+    `
+};
+
+/**
+ * Helper function to escape code blocks in prompts
+ */
+function escapeCodeBlocks(text) {
+  return text.replace(/```/g, '\\`\\`\\`');
+}
+
+/**
+ * Function to fill template variables in a prompt
+ */
+export function getPrompt(promptKey, variables = {}) {
+  let prompt = DEFAULT_PROMPTS[promptKey];
+  if (!prompt) {
+    throw new Error(`Prompt not found: ${promptKey}`);
+  }
+
+  // Replace all variables in the prompt
+  Object.entries(variables).forEach(([k, v]) => {
+    const regex = new RegExp(`\\\${${k}}`, 'g');
+    prompt = prompt.replace(regex, v);
+  });
+
+  return prompt.trim();
+}
+
+export const CODE_GENERATOR_TYPES = {
+  PLAYWRIGHT_CODE_GENERATION: 'Playwright-TS-Code-Generator',
+  SELENIUM_JAVA_PAGE_ONLY: 'Selenium-Java-Page-Only',
+  SELENIUM_JAVA_TEST_ONLY: 'Selenium-Java-Test-Only',
+  CUCUMBER_ONLY: 'Cucumber-Only',
+  PLAYWRIGHT_TS_PAGE_ONLY: 'Playwright-TS-Page-Only',
+  PLAYWRIGHT_TS_TEST_ONLY: 'Playwright-TS-Test-Only',
+  PLAYWRIGHT_JS_PAGE_ONLY: 'Playwright-JavaScript-Page-Only',
+  PLAYWRIGHT_JS_TEST_ONLY: 'Playwright-JavaScript-Test-Only'
+};
+=================================================================
+CHAT.JS
+================================================================
+
+// ================
+    // Dropdown / Setup
+    // ================
+    setupDropdowns() {
+        if (!this.languageBindingSelect || !this.browserEngineSelect) return;
+
+        const updateDropdowns = () => {
+            const lang = this.languageBindingSelect.value;   // 'java','csharp','typescript' , 'javascript'
+            const eng  = this.browserEngineSelect.value;     // 'selenium','playwright'
+
+            // If TypeScript => force Playwright, disable Selenium
+            if (lang === 'typescript') {
+                this.browserEngineSelect.value = 'playwright';
+                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                if (selOpt) selOpt.disabled = true;
+            } else {
+                const selOpt = this.browserEngineSelect.querySelector('option[value="selenium"]');
+                if (selOpt) selOpt.disabled = false;
+            }
+
+            this.codeGeneratorType = this.getPromptKey(lang, eng);
+            chrome.storage.sync.set({ codeGeneratorType: this.codeGeneratorType });
+        };
+
+        updateDropdowns();
+
+        this.languageBindingSelect.addEventListener('change', updateDropdowns);
+        this.browserEngineSelect.addEventListener('change', updateDropdowns);
+    }
+
+    getPromptKey(language, engine) {
+        // If it's TypeScript+Playwright, we do:
+        if (language === 'typescript' && engine === 'playwright') {
+            // read the radio buttons
+          const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
+          if (!selectedRadio) {
+          return 'PLAYWRIGHT_CODE_GENERATION';
+        }
+        const radioValue = selectedRadio.value; // "PAGE" or "TEST"
+  
+        if (radioValue === 'PAGE') {
+          return 'PLAYWRIGHT_TS_PAGE_ONLY';
+        } else if (radioValue === 'TEST') {
+          return 'PLAYWRIGHT_TS_TEST_ONLY';
+        } else{
+          return 'CUCUMBER_ONLY';
+        }
+        }
+
+        // If it's JavaScript+Playwright, we do:
+        if (language === 'javascript' && engine === 'playwright') {
+            // read the radio buttons
+          const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
+          if (!selectedRadio) {
+          return 'PLAYWRIGHT_CODE_GENERATION';
+        }
+        const radioValue = selectedRadio.value; // "PAGE" or "TEST"
+  
+        if (radioValue === 'PAGE') {
+          return 'PLAYWRIGHT_JS_PAGE_ONLY';
+        } else if (radioValue === 'TEST') {
+          return 'PLAYWRIGHT_JS_TEST_ONLY';
+        } else{
+          return 'CUCUMBER_ONLY';
+        }
+        }
+    
+        // If it's Java+Selenium, let's see which radio was chosen:
+        if (language === 'java' && engine === 'selenium') {
+          // read the radio buttons
+          const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
+          if (!selectedRadio) {
+            // fallback
+            return 'SELENIUM_JAVA_TEST_ONLY'; 
+          }
+          const radioValue = selectedRadio.value; // "PAGE" or "TEST"
+    
+          if (radioValue === 'PAGE') {
+            return 'SELENIUM_JAVA_PAGE_ONLY';
+          } else if (radioValue === 'TEST') {
+            return 'SELENIUM_JAVA_TEST_ONLY';
+          } else{
+            return 'CUCUMBER_ONLY';
+          }
+        }
+
+        // If it's JavaScript+Selenium, let's see which radio was chosen:
+        if (language === 'javascript' && engine === 'selenium') {
+            // read the radio buttons
+            const selectedRadio = document.querySelector('input[name="javaGenerationMode"]:checked');
+            if (!selectedRadio) {
+              // fallback
+              return 'SELENIUM_JAVA_TEST_ONLY'; 
+            }
+            const radioValue = selectedRadio.value; // "PAGE" or "TEST"
+      
+            if (radioValue === 'PAGE') {
+              return 'SELENIUM_JAVA_PAGE_ONLY';
+            } else if (radioValue === 'TEST') {
+              return 'SELENIUM_JAVA_TEST_ONLY';
+            } else{
+              return 'CUCUMBER_ONLY';
+            }
+          }
